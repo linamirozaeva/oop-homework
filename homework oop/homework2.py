@@ -1,164 +1,64 @@
-# # def parse_recipe(lines):
-# #     ingredients = []
-# #     for line in lines:
-# #         if not line.strip():
-# #             continue
-# #
-# #         parts = line.split('|')
-# #         ingredient_name = parts[0].strip()
-# #         quantity = int(parts[1].strip())
-# #         measure = parts[2].strip()
-# #
-# #         ingredients.append({
-# #             'ingredient_name': ingredient_name,
-# #             'quantity': quantity,
-# #             'measure': measure
-# #         })
-# #     return ingredients
-# #
-# # def read_recipes_from_file(filename):
-# #     with open(filename, encoding='utf-8') as file:
-# #         data = file.read().split('\\n\\n')
-# #     cook_book = {}
-# #     for recipe_block in data:
-# #         lines = recipe_block.strip().splitlines()
-# #         dish_name = lines.pop(0).strip()
-# #         ingredients = parse_recipe(lines)
-# #         cook_book[dish_name] = ingredients
-# #     return cook_book
-# #
-# # if __name__ == "__main__":
-# #     cook_book = read_recipes_from_file('recipes.txt')
-# #     print(cook_book)
-#
-# import os
-#
-#
-# def parse_recipe(lines):
-#     ingredients = []
-#     for line in lines:
-#         if not line.strip():
-#             continue
-#         parts = line.split('|')
-#         ingredient_name = parts[0].strip()
-#         quantity = int(parts[1].strip())
-#         measure = parts[2].strip()
-#         ingredients.append({
-#             'ingredient_name': ingredient_name,
-#             'quantity': quantity,
-#             'measure': measure
-#         })
-#     return ingredients
-#
-#
-# def read_recipes_from_file(filename):
-#     with open(filename, encoding='utf-8') as file:
-#         data = file.read().split('\\n\\n')
-#
-#     cook_book = {}
-#     for recipe_block in data:
-#         lines = recipe_block.strip().splitlines()
-#         dish_name = lines.pop(0).strip()
-#         ingredients = parse_recipe(lines)
-#         cook_book[dish_name] = ingredients
-#     return cook_book
-#
-#
-# def get_shop_list_by_dishes(dishes, person_count):
-#     shop_list = {}
-#     for dish in dishes:
-#         if dish in cook_book:
-#             for ingredient in cook_book[dish]:
-#                 ingredient_name = ingredient['ingredient_name']
-#                 total_quantity = ingredient['quantity'] * person_count
-#
-#                 if ingredient_name in shop_list:
-#                     shop_list[ingredient_name]['quantity'] += total_quantity
-#                 else:
-#                     shop_list[ingredient_name] = {
-#                         'measure': ingredient['measure'],
-#                         'quantity': total_quantity
-#                     }
-#     return shop_list
-#
-# if __name__ == "__main__":
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-#     filename = os.path.join(current_dir, 'recipes.txt')
-#     cook_book = read_recipes_from_file(filename)
-#     result = get_shop_list_by_dishes(['Запеченный картофель', 'Омлет'], 2)
-#     print(result)
-#
-
-# Задача №1:
-from pprint import pprint
+# Task 1
+import json
 cook_book = {}
 with open('recipes.txt', 'rt', encoding='utf-8') as file:
-    dishes = ''
-    for x in file:
-        x = x.strip()
-        if x.isdigit():
+    current_dish = None
+    for line in file:
+        line = line.strip()
+        if line.isdigit():
             continue
-        elif x and '|' not in x:
-            cook_book[x] = []
-            dishes = x
-        elif x and '|' in x:
-            a, b, c = x.split(" | ")
-            cook_book.get(dishes).append(dict(ingredient_name=a, quantity=int(b), measure=c))
+        elif '|' not in line:
+            current_dish = line
+            cook_book[current_dish] = []
+        else:
+            ingredient_name, quantity, measure = line.split('|')
+            ingredient = {
+                'ingredient_name': ingredient_name.strip(),
+                'quantity': int(quantity),
+                'measure': measure.strip()
+            }
+            cook_book[current_dish].append(ingredient)
 
-pprint(cook_book)
+print(json.dumps(cook_book, indent=4, ensure_ascii=False))
 
 
-# Задача №2:
-def get_shop_list_by_dishes(dishes_list, person_count):
+# Task 2
+def get_shop_list_by_dishes(dishes_list, person_count, cook_book):
     shop_list = {}
     for dish in dishes_list:
-        if dish in cook_book:
-            for ingredient in cook_book[dish]:
-                if ingredient['ingredient_name'] in shop_list:
-                    shop_list[ingredient['ingredient_name']]['quantity'] += ingredient['quantity'] * person_count
-                else:
-                    shop_list[ingredient['ingredient_name']] = ({'measure': ingredient['measure'], 'quantity':
-                                                                (ingredient['quantity'] * person_count)})
-        else:
-            print('Такого блюда нет в книге')
+        if dish not in cook_book:
+            print(f"Блюдо '{dish}' отсутствует в кулинарной книге.")
+            continue
+        ingredients = cook_book[dish]
+        for ingredient in ingredients:
+            ing_name = ingredient["ingredient_name"]
+            if ing_name in shop_list:
+                shop_list[ing_name]["quantity"] += ingredient["quantity"] * person_count
+            else:
+                shop_list[ing_name] = {"measure": ingredient["measure"],
+                                       "quantity": ingredient["quantity"] * person_count}
     return shop_list
 
+shop_list = get_shop_list_by_dishes(["Фахитос", "Омлет"], 2, cook_book)
+print(json.dumps(shop_list, indent=4, ensure_ascii=False))
 
-pprint(get_shop_list_by_dishes(['Фахитос', 'Омлет'], 2))
 
-# Задача №3:
-with open('1.txt', 'r', encoding='utf-8') as file_1:
-    line_1 = {}
-    count_1 = 0
-    for line in file_1.readlines():
-        count_1 += 1
-        line_1['1.txt'] = count_1
-with open('1.txt', 'r', encoding='utf-8') as file_1:
-    text_1 = file_1.read()
+# Task 3
+import os
+def sort_and_write_files_to_result(*filenames):
+    files_data = []
+    for filename in filenames:
+        with open(filename, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            content = ''.join(lines)
+            num_lines = len(lines)
+            files_data.append((filename, num_lines, content))
+    sorted_files = sorted(files_data, key=lambda x: x[1])
+    with open('result.txt', 'w', encoding='utf-8') as output_file:
+        for filename, num_lines, content in sorted_files:
+            output_file.write(f"{filename}\n")
+            output_file.write(f"{num_lines}\n")
+            output_file.write(content)
+            output_file.write("\n")
 
-with open('2.txt', 'r', encoding='utf-8') as file_2:
-    line_2 = {}
-    count_2 = 0
-    for line in file_2.readlines():
-        count_2 += 1
-        line_2['2.txt'] = count_2
-with open('2.txt', 'r', encoding='utf-8') as file_2:
-    text_2 = file_2.read()
-
-with open('3.txt', 'r', encoding='utf-8') as file_3:
-    line_3 = {}
-    count_3 = 0
-    for line in file_3.readlines():
-        count_3 += 1
-        line_3['3.txt'] = count_3
-with open('3.txt', 'r', encoding='utf-8') as file_3:
-    text_3 = file_3.read()
-
-join = sorted(list(line_1.items()) + list(line_2.items()) + list(line_3.items()), key=lambda x: x[1])
-
-with open('result.txt', 'w', encoding='utf-8') as file_result:
-    for line in join:
-        file_result.write(f'{join[0][0]}\n {join[0][1]}\n {text_2}\n {join[1][0]}\n {join[1][1]}\n {text_1}\n'
-                          f'{join[2][0]}\n {join[2][1]}\n {text_3}\n')
-
-# print(file_result)
+sort_and_write_files_to_result('1.txt', '2.txt', '3.txt')
